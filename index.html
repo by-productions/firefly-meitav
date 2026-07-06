@@ -1,0 +1,1709 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FIREFLY by מיטב · הרשמה לגיבוש</title>
+<link rel="icon" href="LOGOnobg.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;800;900&family=Rubik:wght@400;500;600;700&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet" />
+<style>
+/* ============================================================
+   FIREFLY by מיטב — Registration Site
+   Single-file HTML. Wire to Supabase via CONFIG (ראו SUPABASE_SETUP.md).
+   ============================================================ */
+:root{
+  --violet-deep:#2a1559;
+  --violet-night:#190b34;
+  --violet-glow:#4d2a8f;
+  --panel:#321a64;
+  --panel-2:#2a1657;
+  --purple:#8b5cf6;
+  --magenta:#ff2d8e;
+  --orange:#ff7a1a;
+  --gold:#ffc23c;
+  --cream:#fff4e8;
+  --text:#f3ebff;
+  --muted:#c3b0e6;
+  --line:rgba(199,167,255,.18);
+  --green:#34c06b;
+  --grad:linear-gradient(105deg,#8b5cf6 0%,#ff2d8e 42%,#ff7a1a 72%,#ffc23c 100%);
+  --grad-soft:linear-gradient(105deg,rgba(139,92,246,.22),rgba(255,45,142,.20) 45%,rgba(255,122,26,.20) 75%,rgba(255,194,60,.22));
+  --radius:20px;
+  --shadow:0 18px 50px rgba(10,4,30,.55);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:'Rubik','Heebo',sans-serif;
+  color:var(--text);
+  background:
+    radial-gradient(1100px 700px at 78% -8%, rgba(255,122,26,.18), transparent 60%),
+    radial-gradient(900px 700px at 12% 8%, rgba(255,45,142,.18), transparent 55%),
+    radial-gradient(1200px 900px at 50% 110%, rgba(139,92,246,.28), transparent 60%),
+    linear-gradient(160deg,#3a1d6e 0%,#2a1559 38%,#1f1046 72%,#190b34 100%);
+  background-attachment:fixed;
+  min-height:100vh;
+  overflow-x:hidden;
+  line-height:1.6;
+}
+img{max-width:100%;display:block}
+a{color:inherit}
+button{font-family:inherit;cursor:pointer}
+::selection{background:rgba(255,122,26,.4)}
+
+/* firefly canvas */
+#fireflies{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+
+/* gradient text */
+.grad-text{
+  background:var(--grad);
+  -webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;color:transparent;
+}
+
+/* ---------- generic ---------- */
+.wrap{max-width:1080px;margin:0 auto;padding:0 22px;position:relative;z-index:2}
+.eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  font-size:.78rem;letter-spacing:.22em;font-weight:700;
+  text-transform:uppercase;color:var(--gold);
+  font-family:'Orbitron',sans-serif;
+}
+.eyebrow::before{content:"";width:22px;height:2px;border-radius:2px;background:var(--grad)}
+.section{padding:78px 0;position:relative;z-index:2}
+.section h2{
+  font-family:'Heebo',sans-serif;font-weight:900;
+  font-size:clamp(1.7rem,4.5vw,2.7rem);margin:.35em 0 .2em;line-height:1.15;
+}
+.lead{color:var(--muted);font-size:1.06rem;max-width:60ch}
+
+.btn{
+  border:0;border-radius:999px;padding:15px 30px;font-weight:700;font-size:1rem;
+  color:#231; background:var(--grad);background-size:180% 180%;
+  box-shadow:0 10px 30px rgba(255,122,26,.35);
+  transition:transform .25s, box-shadow .25s, background-position .5s;
+  display:inline-flex;align-items:center;gap:10px;justify-content:center;
+}
+.btn:hover{transform:translateY(-3px);box-shadow:0 16px 40px rgba(255,45,142,.45);background-position:100% 0}
+.btn:active{transform:translateY(-1px)}
+.btn.ghost{
+  background:rgba(255,255,255,.04);color:var(--text);
+  border:1.5px solid var(--line);box-shadow:none;backdrop-filter:blur(6px);
+}
+.btn.ghost:hover{border-color:rgba(255,194,60,.6);background:rgba(255,255,255,.07)}
+.btn[disabled]{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none}
+
+/* ============================================================
+   LOGIN GATE
+   ============================================================ */
+#gate{
+  position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;
+  padding:24px;
+  background:
+    radial-gradient(900px 600px at 50% -10%, rgba(255,122,26,.22), transparent 55%),
+    linear-gradient(160deg,#3a1d6e,#241250 60%,#170a30);
+  transition:opacity .7s ease, visibility .7s;
+}
+#gate.hidden{opacity:0;visibility:hidden;pointer-events:none}
+.gate-card{
+  width:min(440px,100%);text-align:center;
+  background:linear-gradient(180deg,rgba(63,33,118,.75),rgba(38,18,80,.85));
+  border:1px solid var(--line);border-radius:28px;
+  padding:38px 32px 34px;box-shadow:var(--shadow);
+  position:relative;overflow:hidden;backdrop-filter:blur(10px);
+  animation:rise .8s cubic-bezier(.2,.7,.2,1) both;
+}
+.gate-card::before{
+  content:"";position:absolute;inset:-2px;border-radius:30px;padding:2px;
+  background:var(--grad);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;mask-composite:exclude;opacity:.55;pointer-events:none;
+}
+.gate-logo{width:150px;margin:0 auto 6px;filter:drop-shadow(0 0 26px rgba(255,122,26,.4))}
+.gate-card h1{font-family:'Heebo';font-weight:800;font-size:1.45rem;margin:.2em 0 .1em}
+.gate-card p{color:var(--muted);font-size:.96rem;margin:.2em 0 22px}
+.field{text-align:right;margin-bottom:14px}
+.field label{display:block;font-size:.85rem;font-weight:600;color:var(--muted);margin:0 2px 7px}
+.field input,.field select,.field textarea{
+  width:100%;padding:14px 16px;border-radius:14px;font-size:1rem;font-family:inherit;
+  background:rgba(15,7,40,.55);border:1.5px solid var(--line);color:var(--text);
+  transition:border-color .2s, box-shadow .2s, background .2s;
+}
+.field input::placeholder,.field textarea::placeholder{color:#9580bd}
+.field input:focus,.field select:focus,.field textarea:focus{
+  outline:none;border-color:var(--orange);
+  box-shadow:0 0 0 4px rgba(255,122,26,.18);background:rgba(15,7,40,.8);
+}
+/* שדה מייל/טלפון נעול עם כפתור "תיקון" */
+.contact-lock{display:flex;align-items:stretch;gap:8px}
+.contact-lock input{flex:1}
+.contact-lock input[readonly]{
+  background:rgba(15,7,40,.35);color:#cdbff0;cursor:not-allowed;
+  border-style:dashed;border-color:rgba(157,136,196,.45);
+}
+.contact-lock.locked input[readonly]{padding-inline-start:34px}
+.contact-lock.locked{position:relative}
+.contact-lock.locked::before{
+  content:"🔒";position:absolute;inset-inline-start:12px;top:50%;transform:translateY(-50%);
+  font-size:.8rem;opacity:.8;pointer-events:none;z-index:1;
+}
+.fix-btn{
+  flex:0 0 auto;white-space:nowrap;padding:0 14px;border-radius:14px;cursor:pointer;
+  font-family:inherit;font-size:.82rem;font-weight:700;color:var(--cream);
+  background:rgba(255,255,255,.06);border:1.5px solid rgba(255,194,60,.5);
+  transition:border-color .2s, background .2s;
+}
+.fix-btn:hover{border-color:rgba(255,194,60,.9);background:rgba(255,255,255,.1)}
+.contact-lock:not(.locked) .fix-btn{display:none}
+.contact-note{font-size:.8rem;color:#9d88c4;margin:6px 2px 0;display:none}
+.gate-card .btn{width:100%;margin-top:6px}
+.gate-msg{min-height:20px;font-size:.86rem;color:#ff9eb8;margin-top:10px;font-weight:600}
+.gate-hint{margin-top:16px;font-size:.78rem;color:#8d79b3}
+@keyframes rise{from{opacity:0;transform:translateY(26px) scale(.97)}to{opacity:1;transform:none}}
+
+/* ============================================================
+   APP (revealed after login)
+   ============================================================ */
+#app{opacity:0;transition:opacity .8s ease .15s}
+#app.show{opacity:1}
+
+/* header */
+header.top{
+  position:sticky;top:0;z-index:40;
+  backdrop-filter:blur(12px);
+  background:linear-gradient(180deg,rgba(25,11,52,.82),rgba(25,11,52,.35));
+  border-bottom:1px solid var(--line);
+}
+.top-inner{max-width:1080px;margin:0 auto;padding:11px 22px;display:flex;align-items:center;justify-content:space-between;gap:14px}
+.brand{display:flex;align-items:center;gap:11px}
+.brand img{height:38px;width:auto;object-fit:contain}
+.brand b{font-family:'Orbitron';letter-spacing:.18em;font-size:1rem}
+.greet{font-size:.92rem;color:var(--muted)}
+.greet b{color:var(--gold);font-weight:700}
+.top .btn{padding:10px 20px;font-size:.9rem}
+
+/* ---------- HERO ---------- */
+.hero{padding:46px 0 30px;text-align:center;position:relative;z-index:2}
+.hero-logo{
+  width:min(380px,76vw);margin:0 auto 6px;
+  filter:drop-shadow(0 0 50px rgba(255,122,26,.35)) drop-shadow(0 0 80px rgba(139,92,246,.3));
+  animation:float 6s ease-in-out infinite;
+}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+.hero h1{
+  font-family:'Heebo';font-weight:900;line-height:1.08;
+  font-size:clamp(2rem,6vw,3.4rem);margin:.3em 0 .25em;
+}
+.hero .sub{font-size:clamp(1.05rem,2.4vw,1.3rem);color:var(--muted);max-width:42ch;margin:0 auto 26px}
+.hero-dates{
+  display:inline-flex;align-items:center;gap:10px;
+  font-family:'Rubik','Heebo',sans-serif;font-weight:700;letter-spacing:normal;
+  padding:9px 20px;border-radius:999px;border:1px solid var(--line);
+  background:rgba(255,255,255,.04);color:var(--gold);font-size:1rem;
+}
+.hero-dates .num{font-family:'Orbitron',sans-serif;font-weight:700;letter-spacing:.04em}
+
+/* countdown */
+.countdown{display:flex;gap:14px;justify-content:center;margin:30px auto 4px;flex-wrap:wrap;direction:ltr}
+.cd-box{
+  min-width:84px;padding:16px 10px;border-radius:18px;
+  background:linear-gradient(180deg,rgba(63,33,118,.6),rgba(38,18,80,.7));
+  border:1px solid var(--line);box-shadow:var(--shadow);
+}
+.cd-num{font-family:'Orbitron';font-weight:900;font-size:2rem;line-height:1}
+.cd-lab{font-size:.72rem;color:var(--muted);letter-spacing:.12em;margin-top:6px;text-transform:uppercase}
+.scroll-cue{margin:34px auto 0;color:var(--muted);font-size:.85rem;display:flex;flex-direction:column;align-items:center;gap:6px;animation:bob 2s ease-in-out infinite}
+.scroll-cue svg{width:22px;height:22px}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(8px)}}
+
+/* ---------- intro cards ---------- */
+.reveal{opacity:0;transform:translateY(28px);transition:opacity .7s ease, transform .7s cubic-bezier(.2,.7,.2,1)}
+.reveal.in{opacity:1;transform:none}
+
+.teaser{
+  background:linear-gradient(135deg,rgba(63,33,118,.55),rgba(38,18,80,.5));
+  border:1px solid var(--line);border-radius:var(--radius);
+  padding:30px 28px;box-shadow:var(--shadow);
+}
+.teaser p{color:var(--muted);margin:.4em 0}
+.teaser strong{color:var(--cream)}
+
+/* ---------- timeline ---------- */
+.day-tab-row{display:flex;gap:10px;margin:6px 0 26px;flex-wrap:wrap}
+.day-tab{
+  border:1.5px solid var(--line);background:rgba(255,255,255,.03);
+  color:var(--muted);padding:11px 20px;border-radius:999px;font-weight:600;font-size:.95rem;
+  transition:.2s;
+}
+.day-tab.active{color:#231;background:var(--grad);border-color:transparent;font-weight:700}
+.timeline{position:relative;margin-top:8px}
+.timeline::before{
+  content:"";position:absolute;right:19px;top:6px;bottom:6px;width:3px;border-radius:3px;
+  background:var(--grad);opacity:.55;
+}
+.tl-item{position:relative;padding:0 54px 26px 0;}
+.tl-item:last-child{padding-bottom:4px}
+.tl-dot{
+  position:absolute;right:11px;top:4px;width:20px;height:20px;border-radius:50%;
+  background:var(--violet-night);border:3px solid var(--orange);
+  box-shadow:0 0 0 5px rgba(255,122,26,.15), 0 0 16px rgba(255,122,26,.6);
+}
+.tl-card{
+  background:linear-gradient(135deg,rgba(63,33,118,.5),rgba(38,18,80,.45));
+  border:1px solid var(--line);border-radius:16px;padding:16px 18px;
+  display:flex;justify-content:flex-start;gap:16px;align-items:flex-start;flex-wrap:nowrap;
+  transition:transform .25s, border-color .25s;
+}
+.tl-card:hover{transform:translateX(-6px);border-color:rgba(255,194,60,.5)}
+.tl-card .tl-body{flex:1;min-width:0}
+.tl-time{font-family:'Orbitron';font-weight:700;color:var(--gold);font-size:1.05rem;white-space:nowrap;
+  flex:0 0 auto;min-width:56px;text-align:right;padding-inline-end:14px;border-inline-end:2px solid rgba(255,194,60,.35)}
+.tl-body h4{margin:0 0 3px;font-size:1.06rem;font-weight:700}
+.tl-body span{color:var(--muted);font-size:.9rem}
+.tl-badge{
+  display:inline-block;margin-top:8px;font-size:.8rem;font-weight:700;
+  padding:5px 12px;border-radius:999px;background:var(--grad-soft);
+  border:1px solid rgba(255,194,60,.4);color:var(--gold);
+}
+.tl-note{display:block;margin-top:6px;font-size:.82rem;color:var(--magenta);font-weight:600}
+.tl-foot{margin-top:14px;font-size:.83rem;color:#9d88c4;font-style:italic}
+
+/* ---------- hotels ---------- */
+.hotel-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;margin-top:10px}
+.hotel{
+  border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;
+  background:linear-gradient(135deg,rgba(63,33,118,.5),rgba(38,18,80,.45));box-shadow:var(--shadow);
+}
+.hotel .photos{display:grid;grid-template-columns:1fr 1fr;gap:3px;background:var(--line)}
+.ph{
+  aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,rgba(139,92,246,.3),rgba(255,45,142,.22),rgba(255,122,26,.25));
+  color:rgba(255,255,255,.7);font-size:.78rem;font-weight:600;text-align:center;gap:4px;flex-direction:column;
+}
+.ph svg{width:24px;height:24px;opacity:.7}
+.hotel .photos img{display:block;width:100%;height:100%;aspect-ratio:4/3;object-fit:cover}
+.hotel .meta{padding:16px 18px}
+.hotel .meta h4{margin:0 0 4px;font-size:1.15rem;font-weight:800}
+.hotel .meta span{color:var(--muted);font-size:.9rem}
+
+/* ---------- bring + jingle ---------- */
+.duo{display:grid;grid-template-columns:1.3fr .9fr;gap:18px;margin-top:8px}
+.bring{
+  background:linear-gradient(135deg,rgba(63,33,118,.5),rgba(38,18,80,.45));
+  border:1px solid var(--line);border-radius:var(--radius);padding:24px 26px;box-shadow:var(--shadow);
+}
+.bring h3{margin:0 0 14px;font-size:1.2rem;font-weight:800}
+.bring ul{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.bring li{
+  display:flex;align-items:center;gap:10px;font-size:.95rem;color:var(--text);
+  padding:9px 12px;border-radius:12px;background:rgba(255,255,255,.03);border:1px solid var(--line);
+  cursor:pointer;transition:.2s;user-select:none;
+}
+.bring li .chk{
+  width:20px;height:20px;border-radius:6px;border:2px solid var(--orange);flex:0 0 auto;
+  display:flex;align-items:center;justify-content:center;transition:.2s;
+}
+.bring li.done{background:var(--grad-soft);border-color:rgba(255,194,60,.5)}
+.bring li.done .chk{background:var(--grad);border-color:transparent}
+.bring li .chk svg{width:13px;height:13px;opacity:0;transition:.2s}
+.bring li.done .chk svg{opacity:1}
+.bring .tip{margin-top:14px;font-size:.84rem;color:var(--gold)}
+.jingle{
+  background:linear-gradient(160deg,rgba(255,122,26,.16),rgba(255,45,142,.16));
+  border:1px solid rgba(255,194,60,.35);border-radius:var(--radius);
+  padding:24px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+  box-shadow:var(--shadow);
+}
+.jingle h3{margin:0;font-size:1.15rem;font-weight:800}
+.jingle p{margin:0;color:var(--muted);font-size:.88rem}
+.play-btn{
+  width:74px;height:74px;border-radius:50%;border:0;background:var(--grad);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 10px 30px rgba(255,122,26,.4);transition:transform .2s;
+}
+.play-btn:hover{transform:scale(1.08)}
+.play-btn svg{width:30px;height:30px;color:#2a1057}
+.eq{display:none;gap:4px;align-items:flex-end;height:22px}
+.eq.on{display:flex}
+.eq i{width:4px;background:var(--gold);border-radius:2px;animation:eq .8s ease-in-out infinite}
+.eq i:nth-child(2){animation-delay:.2s}.eq i:nth-child(3){animation-delay:.4s}.eq i:nth-child(4){animation-delay:.1s}
+@keyframes eq{0%,100%{height:6px}50%{height:22px}}
+
+/* ============================================================
+   FORM
+   ============================================================ */
+.form-shell{
+  background:linear-gradient(180deg,rgba(50,26,100,.62),rgba(33,16,72,.7));
+  border:1px solid var(--line);border-radius:26px;box-shadow:var(--shadow);
+  padding:30px 30px 26px;position:relative;overflow:hidden;
+}
+.progress{height:6px;border-radius:6px;background:rgba(255,255,255,.07);margin-bottom:8px;overflow:hidden}
+.progress i{display:block;height:100%;width:20%;background:var(--grad);border-radius:6px;transition:width .4s cubic-bezier(.2,.7,.2,1)}
+.step-meta{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted);margin-bottom:20px}
+.step-meta b{color:var(--gold)}
+.step{display:none;animation:fadeStep .45s ease both}
+.step.active{display:block}
+@keyframes fadeStep{from{opacity:0;transform:translateX(-14px)}to{opacity:1;transform:none}}
+.step h3{font-size:1.35rem;font-weight:800;margin:0 0 4px}
+.step .hint{color:var(--muted);font-size:.92rem;margin:0 0 20px}
+.locked-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:6px}
+.locked{
+  background:rgba(255,255,255,.04);border:1px dashed var(--line);border-radius:14px;padding:12px 14px;
+}
+.locked .k{font-size:.74rem;color:var(--muted);letter-spacing:.04em}
+.locked .v{font-weight:700;font-size:1.02rem;margin-top:2px}
+.locked .lock{float:left;font-size:.72rem;color:#9d88c4}
+
+/* chips multiselect */
+.chips{display:flex;flex-wrap:wrap;gap:10px;margin:4px 0 6px}
+.chip{
+  padding:10px 16px;border-radius:999px;border:1.5px solid var(--line);
+  background:rgba(255,255,255,.03);color:var(--text);font-weight:600;font-size:.92rem;transition:.2s;
+}
+.chip.sel{background:var(--grad-soft);border-color:rgba(255,194,60,.6);color:var(--cream)}
+.chip.none-opt.sel{background:rgba(52,192,107,.18);border-color:var(--green);color:#bff5d3}
+
+/* radio cards */
+.radio-card{
+  display:flex;gap:14px;align-items:flex-start;padding:16px 18px;border-radius:16px;
+  border:1.5px solid var(--line);background:rgba(255,255,255,.03);cursor:pointer;margin-bottom:12px;transition:.2s;
+}
+.radio-card:hover{border-color:rgba(255,194,60,.5)}
+.radio-card.sel{border-color:var(--orange);background:var(--grad-soft)}
+.radio-card .ring{
+  width:22px;height:22px;border-radius:50%;border:2px solid var(--muted);flex:0 0 auto;margin-top:2px;
+  display:flex;align-items:center;justify-content:center;transition:.2s;
+}
+.radio-card.sel .ring{border-color:var(--orange)}
+.radio-card.sel .ring::after{content:"";width:11px;height:11px;border-radius:50%;background:var(--grad)}
+.radio-card .rc-body b{display:block;font-size:1.02rem}
+.radio-card .rc-body span{color:var(--muted);font-size:.86rem}
+.cap{display:inline-block;margin-top:6px;font-size:.78rem;color:var(--gold);font-weight:600}
+.seats{display:inline-flex;align-items:center;gap:6px;margin-top:8px;font-size:.8rem;font-weight:700;padding:4px 11px;border-radius:999px;border:1px solid rgba(52,192,107,.4);background:rgba(52,192,107,.12);color:#7ff0a8}
+.seats.low{border-color:rgba(255,194,60,.5);background:rgba(255,194,60,.12);color:var(--gold)}
+.seats.full{border-color:rgba(255,45,142,.5);background:rgba(255,45,142,.14);color:#ff9eb8}
+.radio-card.disabled{opacity:.5;cursor:not-allowed}
+.radio-card.disabled:hover{border-color:var(--line)}
+.chosen-card{
+  display:flex;gap:14px;align-items:center;padding:18px 20px;border-radius:16px;
+  border:1.5px solid rgba(255,194,60,.5);background:var(--grad-soft);margin-bottom:8px;
+}
+.chosen-card .ic{font-size:1.7rem;flex:0 0 auto}
+.chosen-card b{display:block;font-size:1.05rem}
+.chosen-card span{color:var(--muted);font-size:.88rem}
+
+/* searchable roommate */
+.search-box{position:relative;margin-top:6px}
+.search-list{
+  max-height:210px;overflow:auto;border:1px solid var(--line);border-radius:14px;margin-top:8px;
+  background:rgba(15,7,40,.6);
+}
+.search-list .opt{padding:11px 16px;cursor:pointer;border-bottom:1px solid var(--line);font-size:.95rem;transition:.15s}
+.search-list .opt:last-child{border-bottom:0}
+.search-list .opt:hover{background:rgba(255,122,26,.16)}
+.search-list .opt.taken{opacity:.4;cursor:not-allowed}
+.search-list .opt small{color:var(--muted)}
+.picked-pill{
+  display:inline-flex;align-items:center;gap:10px;margin-top:12px;padding:9px 16px;border-radius:999px;
+  background:var(--grad-soft);border:1px solid rgba(255,194,60,.5);font-weight:600;
+}
+.picked-pill button{background:none;border:0;color:var(--magenta);font-weight:700;font-size:1.1rem}
+.coord-note{margin-top:12px;font-size:.84rem;color:var(--gold);background:rgba(255,194,60,.08);border:1px solid rgba(255,194,60,.25);padding:10px 14px;border-radius:12px}
+
+/* buses-only banner */
+.bus-banner{
+  display:flex;gap:14px;align-items:center;
+  background:linear-gradient(135deg,rgba(255,45,142,.2),rgba(255,122,26,.16));
+  border:1.5px solid var(--magenta);border-radius:16px;padding:14px 18px;margin-bottom:18px;
+}
+.bus-banner svg{width:30px;height:30px;flex:0 0 auto;color:var(--gold)}
+.bus-banner b{display:block;font-size:1.02rem}
+.bus-banner span{font-size:.86rem;color:var(--muted)}
+
+/* followups */
+.followups{margin-top:14px;border-right:3px solid var(--orange);padding-right:16px}
+.mini-q{margin-bottom:14px}
+.mini-q .q{font-weight:600;font-size:.95rem;margin-bottom:8px}
+.yn{display:flex;gap:10px}
+.yn button{
+  padding:9px 22px;border-radius:12px;border:1.5px solid var(--line);
+  background:rgba(255,255,255,.03);color:var(--text);font-weight:600;transition:.2s;
+}
+.yn button.sel{background:var(--grad);color:#2a1057;border-color:transparent}
+
+.err{color:#ff9eb8;font-size:.82rem;font-weight:600;margin-top:6px;min-height:1em}
+.optional-tag{font-size:.74rem;color:#9d88c4;font-weight:500}
+
+.nav-row{display:flex;justify-content:space-between;gap:12px;margin-top:26px}
+
+/* review */
+.review{display:grid;gap:10px}
+.review .row{
+  display:flex;justify-content:space-between;gap:14px;padding:12px 16px;border-radius:12px;
+  background:rgba(255,255,255,.03);border:1px solid var(--line);
+}
+.review .row .k{color:var(--muted);font-size:.88rem}
+.review .row .v{font-weight:600;text-align:left}
+.myreg-status{
+  background:var(--grad-soft);border:1px solid rgba(255,194,60,.4);border-radius:14px;
+  padding:14px 18px;font-size:1.02rem;font-weight:600;
+}
+.myreg-status b{color:var(--gold)}
+
+/* confirmation */
+#confirm{display:none;text-align:center;padding:30px 10px}
+#confirm.show{display:block;animation:fadeStep .6s ease both}
+.confirm-logo{width:140px;margin:0 auto 10px;filter:drop-shadow(0 0 30px rgba(255,122,26,.5))}
+#confirm h2{font-size:clamp(1.8rem,5vw,2.6rem);margin:.2em 0}
+#confirm p{color:var(--muted);max-width:46ch;margin:.4em auto}
+#confirm .em{color:var(--gold)}
+
+/* footer */
+footer{border-top:1px solid var(--line);margin-top:30px;padding:34px 0 50px;position:relative;z-index:2}
+footer .f-inner{max-width:1080px;margin:0 auto;padding:0 22px;display:flex;justify-content:space-between;align-items:center;gap:18px;flex-wrap:wrap}
+footer .f-brand{display:flex;align-items:center;gap:12px}
+footer .f-brand img{height:42px;width:auto;object-fit:contain}
+footer .f-contact{text-align:left}
+footer a.mail{color:var(--gold);font-weight:600;text-decoration:none}
+footer a.mail:hover{text-decoration:underline}
+footer small{color:#9078b3;font-size:.8rem}
+
+/* ---------- responsive ---------- */
+@media (max-width:760px){
+  .hotel-grid{grid-template-columns:1fr}
+  .duo{grid-template-columns:1fr}
+  .bring ul{grid-template-columns:1fr}
+  .locked-grid{grid-template-columns:1fr}
+  .greet{display:none}
+  .form-shell{padding:22px 18px}
+  .review .row{flex-direction:column;gap:2px}
+  .review .row .v{text-align:right}
+  footer .f-inner{flex-direction:column;align-items:flex-start;text-align:right;gap:14px}
+  footer .f-contact{text-align:right}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+  #fireflies{display:none}
+}
+</style>
+</head>
+<body>
+
+<canvas id="fireflies"></canvas>
+
+<!-- ============================ LOGIN GATE ============================ -->
+<div id="gate">
+  <div class="gate-card">
+    <img class="gate-logo" src="LOGOnobg.png" alt="FIREFLY by מיטב" />
+    <h1>ברוכים הבאים ל־<span class="grad-text">FIREFLY</span></h1>
+    <p>גיבוש החברה של מיטב מחכה לכם. כדי להיכנס ולהירשם, הזינו את מספר העובד שלכם.</p>
+    <div class="field">
+      <label for="empNo">מספר עובד</label>
+      <input id="empNo" type="text" inputmode="numeric" autocomplete="off" placeholder="מספר עובד" />
+    </div>
+    <button class="btn" id="gateBtn">כניסה לאתר הגיבוש</button>
+    <div class="gate-msg" id="gateMsg"></div>
+    <div class="gate-hint">ההרשמה פתוחה רק לעובדים המופיעים ברשימת המשתתפים.<br>מענה לשאלות יינתן ע״י מוקד הרישום: <a href="mailto:b.yproductionsltd@gmail.com" style="color:var(--gold);font-weight:600">b.yproductionsltd@gmail.com</a></div>
+  </div>
+</div>
+
+<!-- ============================ APP ============================ -->
+<div id="app">
+
+  <header class="top">
+    <div class="top-inner">
+      <div class="brand">
+        <img src="LOGOnobg.png" alt="FIREFLY by מיטב" />
+      </div>
+      <div class="greet">היי <b id="greetName">אורח/ת</b> 👋 כיף שהצטרפת</div>
+      <button class="btn ghost" onclick="document.getElementById('formSection').scrollIntoView({behavior:'smooth'})">להרשמה</button>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <section class="hero wrap">
+    <img class="hero-logo" src="logo-hero.png" alt="FIREFLY by מיטב" />
+    <h1>הכנרת מחכה לנו —<br/><span class="grad-text">ואתם הולכים להנות מכל רגע</span></h1>
+    <p class="sub">יומיים של חופש, נוף מרהיב, אנרגיה מעולה והמון רגעים של כיף</p>
+    <div class="hero-dates">🗓️ <span class="num" dir="ltr">2-3</span> בספטמבר <span class="num" dir="ltr">2026</span> · הכנרת</div>
+
+    <div class="countdown" id="countdown" aria-label="ספירה לאחור">
+      <div class="cd-box"><div class="cd-num" id="cd-d">--</div><div class="cd-lab">ימים</div></div>
+      <div class="cd-box"><div class="cd-num" id="cd-h">--</div><div class="cd-lab">שעות</div></div>
+      <div class="cd-box"><div class="cd-num" id="cd-m">--</div><div class="cd-lab">דקות</div></div>
+      <div class="cd-box"><div class="cd-num" id="cd-s">--</div><div class="cd-lab">שניות</div></div>
+    </div>
+
+    <div class="scroll-cue">
+      <span>גללו לגלות מה מחכה לנו</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+    </div>
+  </section>
+
+  <!-- TEASER -->
+  <section class="section wrap">
+    <div class="teaser reveal">
+      <h2 style="margin-top:.3em">זה הזמן לעצור את השגרה</h2>
+      <p>לארוז מצב רוח טוב ולהתכונן ליומיים של חופש על שפת הכנרת. בין המים הכחולים, האוויר הפתוח, הפעילויות, המוזיקה והחברה הטובה — <strong>מחכה לנו גיבוש חברה שכולו כיף, חיבור וזמן יחד מחוץ לשגרה.</strong></p>
+      <p>שריינו את מקומכם — החוויה הזו היא לא משהו שרוצים לפספס. 🔥</p>
+    </div>
+  </section>
+
+  <!-- TIMELINE -->
+  <section class="section wrap">
+    <h2 class="reveal">טעימה ממה שמחכה לנו</h2>
+    <div class="day-tab-row reveal">
+      <button class="day-tab active" data-day="0">יום רביעי · 2.9.26</button>
+      <button class="day-tab" data-day="1">יום חמישי · 3.9.26</button>
+    </div>
+    <div class="timeline reveal" id="timeline"></div>
+    <p class="tl-foot reveal">* הלו״ז ראשוני ועשוי להתעדכן בהמשך.</p>
+  </section>
+
+  <!-- HOTELS -->
+  <section class="section wrap">
+    <span class="eyebrow reveal">איפה נישן</span>
+    <h2 class="reveal">שני מלונות נהדרים בכנרת</h2>
+    <p class="lead reveal">אווירת חופש, נופים יפים וחדרים נעימים — בדיוק כמו שגיבוש חברה אמיתי צריך להרגיש.</p>
+    <div class="hotel-grid" style="margin-top:22px">
+      <div class="hotel reveal">
+        <div class="photos">
+          <img src="https://davidsharphotels.com/wp-content/uploads/2024/03/IMG_20240508_095321_515-e1720957370676.jpg" alt="מלון נבל דוד" loading="lazy" />
+          <img src="https://davidsharphotels.com/wp-content/uploads/2025/02/0665_Assaf-Pinchuk-photography-scaled.jpg" alt="מלון נבל דוד" loading="lazy" />
+        </div>
+        <div class="meta"><h4>מלון נבל דוד</h4><span>כנרת</span></div>
+      </div>
+      <div class="hotel reveal">
+        <div class="photos">
+          <img src="https://www.isrotel.co.il/media/27147/29.jpg?anchor=center&mode=crop&width=243&height=180&rnd=134116588120000000" alt="מלון גומא" loading="lazy" />
+          <img src="https://www.isrotel.co.il/media/32922/6961_assaf-pinchuk-photography.jpg?anchor=center&mode=crop&width=243&height=180&rnd=134116588120000000" alt="מלון גומא" loading="lazy" />
+        </div>
+        <div class="meta"><h4>מלון גומא</h4><span>כנרת</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- JINGLE -->
+  <section class="section wrap">
+    <div class="jingle reveal" style="max-width:520px;margin:0 auto">
+      <h3>🎵 הג׳ינגל של הגיבוש</h3>
+      <button class="play-btn" id="playBtn" aria-label="נגן את הג׳ינגל">
+        <svg id="playIcon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+      </button>
+      <div class="eq" id="eq"><i></i><i></i><i></i><i></i></div>
+      <p id="jingleTxt">לחצו כדי להתחמם לקראת הגיבוש</p>
+      <audio id="jingle" src="jingle.mp3" preload="none"></audio>
+    </div>
+  </section>
+
+  <!-- FORM -->
+  <section class="section wrap" id="formSection">
+    <span class="eyebrow reveal">טופס ההרשמה</span>
+    <h2 class="reveal">כמה שאלות קצרות — ואתם בפנים</h2>
+    <p class="lead reveal" style="margin-bottom:24px">אנחנו כבר מתרגשים לקראת הגיבוש הקרוב. השאלות הבאות יעזרו לנו לדייק עבורכם חוויה נעימה, מפנקת ומהנה במיוחד.</p>
+
+    <!-- מסך "ההרשמה שלי" — מוצג למי שכבר נרשם -->
+    <div id="myReg" style="display:none">
+      <div class="form-shell">
+        <div class="welcome-strip" id="myRegWelcome" style="margin-bottom:18px"></div>
+        <div class="myreg-status" id="myRegRoommate"></div>
+        <div class="review" id="myRegReview" style="margin-top:18px"></div>
+        <div class="nav-row" id="myRegActions" style="justify-content:flex-start">
+          <button class="btn" id="editBtn">✏️ ערוך את ההרשמה</button>
+        </div>
+        <p class="hint" id="myRegLocked" style="display:none;margin-top:16px">🔒 חלון העריכה נסגר. לשינויים פנו אלינו במייל שבתחתית העמוד.</p>
+      </div>
+    </div>
+
+    <div class="form-shell reveal" id="wizard">
+      <div class="progress"><i id="progressBar"></i></div>
+      <div class="step-meta"><span>שלב <b id="stepNum">1</b> מתוך 6</span><span id="stepName">פרטים אישיים</span></div>
+
+      <!-- STEP 1: personal -->
+      <div class="step active" data-step="1">
+        <h3>הפרטים שלכם</h3>
+        <p class="hint">נא לאשר את הפרטים.</p>
+        <div class="locked-grid">
+          <div class="locked"><span class="lock">🔒 נעול</span><div class="k">שם מלא</div><div class="v" id="lkName">—</div></div>
+          <div class="locked"><span class="lock">🔒 נעול</span><div class="k">מספר עובד</div><div class="v" id="lkEmp">—</div></div>
+        </div>
+        <div class="field">
+          <label for="email">כתובת מייל</label>
+          <div class="contact-lock" id="emailLock" data-contact="email">
+            <input id="email" type="email" placeholder="you@example.com" autocomplete="email" />
+            <button type="button" class="fix-btn" data-fix="email">✏️ תיקון</button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="phone">טלפון נייד</label>
+          <div class="contact-lock" id="phoneLock" data-contact="phone">
+            <input id="phone" type="tel" inputmode="numeric" placeholder="050-0000000" autocomplete="tel" />
+            <button type="button" class="fix-btn" data-fix="phone">✏️ תיקון</button>
+          </div>
+        </div>
+        <p class="contact-note" id="contactNote">המייל והטלפון מולאו אוטומטית מתוך פרטי העובד ונעולים לעריכה. אם משהו לא מדויק — לחצו "תיקון".</p>
+        <div class="err" id="err1"></div>
+      </div>
+
+      <!-- STEP 2: food & health -->
+      <div class="step" data-step="2">
+        <h3>אוכל ובריאות</h3>
+        <p class="hint">כדי שנוכל לדאוג לכל פרט ושתיהנו בראש שקט.</p>
+
+        <div class="field">
+          <label>כשרות</label>
+          <p class="hint" style="margin:0">כל המזון והמשקאות יהיו בכשרות רבנות טבריה.</p>
+          <textarea id="kashrut" style="display:none"></textarea>
+        </div>
+
+        <div class="field">
+          <label>רגישויות / דרישות מזון</label>
+          <p class="hint" style="margin:0 0 8px">סמנו כל מה שרלוונטי. אם אין — בחרו "אין לי רגישויות".</p>
+          <div class="chips" id="allergyChips"></div>
+          <div class="field" id="otherWrap" style="display:none;margin-top:4px">
+            <input id="allergyOther" type="text" placeholder="פרטו את הרגישות..." />
+          </div>
+        </div>
+
+        <div class="followups" id="followups" style="display:none">
+          <div class="mini-q">
+            <div class="q">האם הרגישות מסכנת חיים?</div>
+            <div class="yn" data-yn="lifeRisk"><button type="button" data-v="כן">כן</button><button type="button" data-v="לא">לא</button></div>
+          </div>
+          <div class="mini-q">
+            <div class="q">האם את/ה מצוייד/ת במזרק למקרה הצורך?</div>
+            <div class="yn" data-yn="injector"><button type="button" data-v="כן">כן</button><button type="button" data-v="לא">לא</button></div>
+          </div>
+          <div class="field"><textarea id="allergyNote" rows="2" placeholder="משהו נוסף שחשוב שנדע? (לא חובה)"></textarea></div>
+        </div>
+
+        <div class="field" style="margin-top:6px">
+          <label>מצב רפואי <span class="optional-tag">(לא חובה)</span></label>
+          <p class="hint" style="margin:0 0 8px">אם יש מצב רפואי שעשוי להשפיע על ההשתתפות בפעילויות — עדכנו אותנו כאן או פנו למנהל/ת שלכם.</p>
+          <textarea id="medical" rows="2" placeholder="כתבו כאן..."></textarea>
+        </div>
+        <div class="err" id="err2"></div>
+      </div>
+
+      <!-- STEP 3: hotel -->
+      <div class="step" data-step="3">
+        <h3>איפה תרצו לישון?</h3>
+        <p class="hint">בחירת מלון.</p>
+        <div id="hotelOptions"><div class="hint" style="opacity:.6">טוען מלונות…</div></div>
+        <div class="err" id="err3"></div>
+      </div>
+
+      <!-- STEP 4: roommate -->
+      <div class="step" data-step="4">
+        <h3>עם מי בא לכם לחלוק את החוויה?</h3>
+        <p class="hint">בחירת שותפים/ות לחדר.</p>
+        <div class="radio-card" data-room="choose">
+          <div class="ring"></div>
+          <div class="rc-body"><b>אני רוצה חדר זוגי — לבחור שותף/ה</b><span>נפתח חיפוש לפי שם מתוך רשימת המשתתפים הפנויים</span></div>
+        </div>
+        <div class="radio-card" data-room="trio" id="trioCard">
+          <div class="ring"></div>
+          <div class="rc-body"><b>אני רוצה חדר שלישייה — לבחור 2 שותפים/ות</b><span>בחרו 2 אנשים ותהיו יחד בחדר של שלושה</span></div>
+        </div>
+        <div class="radio-card" data-room="auto">
+          <div class="ring"></div>
+          <div class="rc-body"><b>שיבחרו עבורי שותף/ה לחדר</b><span>נשבץ אתכם בכיף — אל דאגה</span></div>
+        </div>
+
+        <div id="roomSearch" style="display:none">
+          <div class="field"><label for="mateInput" id="mateLabel">חיפוש לפי שם עובד</label>
+            <div class="search-box">
+              <input id="mateInput" type="text" placeholder="הקלידו שם לחיפוש..." autocomplete="off" />
+              <div class="search-list" id="mateList"></div>
+            </div>
+          </div>
+          <div id="pickedWrap"></div>
+          <div class="coord-note" id="trioNote" style="display:none">⚠️ שימו לב: חדר השלישייה נשמר רק לאחר ששלושתכם משלימים את ההרשמה — תאמו ביניכם שכולם נרשמים.</div>
+          <div class="coord-note">⚠️ אם בחרתם שותף/ה באופן עצמאי, חשוב לתאם זאת מולו/ה מראש לפני השלמת ההרשמה.</div>
+        </div>
+        <div class="err" id="err4"></div>
+      </div>
+
+      <!-- STEP 5: bus -->
+      <div class="step" data-step="5">
+        <h3>נקודת איסוף להסעה</h3>
+        <div class="bus-banner">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 16V6a2 2 0 012-2h12a2 2 0 012 2v10M4 16h16M4 16l-1 3m18-3l1 3M7 9h10M6 16v2m12-2v2"/></svg>
+          <div><b>ההגעה באוטובוסים בלבד!</b><span>לא תתאפשר הגעה עצמאית לגיבוש.</span></div>
+        </div>
+        <p class="hint">מהיכן תעלו על ההסעה? <span style="color:#9d88c4">(מספר המקומות מוגבל)</span></p>
+        <div id="busOptions"><div class="hint" style="opacity:.6">טוען מקומות פנויים…</div></div>
+        <div class="err" id="err5"></div>
+      </div>
+
+      <!-- STEP 6: review -->
+      <div class="step" data-step="6">
+        <h3>רגע לפני ששולחים — סיכום</h3>
+        <p class="hint">בדקו שהכל מדויק. לאחר השליחה הפרטים נשמרים אצלנו.</p>
+        <div class="review" id="reviewBox"></div>
+        <div class="err" id="err6"></div>
+      </div>
+
+      <div class="nav-row">
+        <button class="btn ghost" id="backBtn" style="visibility:hidden">חזרה</button>
+        <button class="btn" id="nextBtn">הבא</button>
+      </div>
+    </div>
+
+    <!-- CONFIRMATION -->
+    <div id="confirm">
+      <img class="confirm-logo" src="LOGOnobg.png" alt="" />
+      <h2 class="grad-text" id="confTitle">נרשמתם בהצלחה! 🎉</h2>
+      <p id="confSub"><b class="em" id="confName"></b>, שמורים לכם מקום בגיבוש.</p>
+      <p id="confMsg">אישור הרשמה מפורט יישלח אליכם למייל. נרגשים ומצפים לחוות איתכם גיבוש בלתי נשכח על הכנרת!</p>
+      <p style="margin-top:18px;font-size:.85rem;color:#9d88c4">אפשר לסגור את החלון הזה. נתראה ב־2.9 🔥</p>
+    </div>
+  </section>
+
+  <footer>
+    <div class="f-inner">
+      <div class="f-brand">
+        <img src="LOGOnobg.png" alt="FIREFLY by מיטב" />
+        <div><small>גיבוש החברה של מיטב · 2026</small></div>
+      </div>
+      <div class="f-contact">
+        <div style="font-size:1.05rem;color:var(--muted);margin-bottom:3px">מענה לשאלות — מוקד הרישום:</div>
+        <a class="mail" style="font-size:1.2rem" href="mailto:b.yproductionsltd@gmail.com">b.yproductionsltd@gmail.com</a>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* =================================================================
+   CONFIG — חיבור ל-Supabase. השאירו ריק לעבודה במצב הדגמה (DEMO).
+   (ראו SUPABASE_SETUP.md להוראות מלאות)
+   ================================================================= */
+const CONFIG = {
+  SUPABASE_URL:      "https://oyiaawqwolbybbckhfin.supabase.co",
+  SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im95aWFhd3F3b2xieWJiY2toZmluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5OTIzNjIsImV4cCI6MjA5NjU2ODM2Mn0.o_NvkcAQb3RT7fMh2O76vXAYwNYL7FJliXUM7If_36k",
+};
+const DEMO = !CONFIG.SUPABASE_URL;
+const TEST_EMP = 1000;   // חשבון טסט פנימי (טסט BY) — מוסתר מרשימת השותפים לחדר
+let sb = null;
+if (!DEMO && window.supabase) sb = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+
+/* ---------- נתוני הדגמה (פעילים רק כש-SUPABASE_URL ריק) ---------- */
+const DEMO_EMPLOYEES = [
+  {emp:10234, name:"נועה לוי"},   {emp:10456, name:"איתי כהן"},
+  {emp:10567, name:"שירה מזרחי"}, {emp:10678, name:"דניאל פרץ"},
+  {emp:10789, name:"מאיה אברהם"}, {emp:10890, name:"יואב ביטון"},
+  {emp:10911, name:"תמר חדד"},    {emp:11002, name:"עומר דהן"},
+  {emp:11045, name:"ליהי שלום"},  {emp:11099, name:"רון גבאי"},
+];
+// הרשמה-דמו מראש: נועה (10234) כבר בחרה את דניאל (10678) כשותף →
+// כשנתחבר כדניאל נראה "נועה כבר בחרה אותך".
+const DEMO_REGS = [ {emp:10234, name:"נועה לוי", email:"noa@example.com", phone:"050-1234567", kashrut:"", allergies:"אין לי רגישויות", room_choice:"choose", roommate_emp:10678, bus:"offices"} ];
+const DEMO_BUS_BASE = { offices:638, ikea:50 }; // תפוסים בסיסיים להדגמה (ikea מלא)
+const DEMO_BUS_META = [
+  {id:"offices", label:"משרדי החברה — ז׳בוטינסקי 1 בני ברק, פינת בן גוריון", capacity:650},
+  {id:"ikea",    label:"איקאה נתניה", capacity:50},
+];
+
+/* =================================================================
+   API LAYER — Supabase או מצב הדגמה
+   ================================================================= */
+const sleep = ms => new Promise(r=>setTimeout(r,ms));
+const demoTaken = () => {
+  const s=new Set(); DEMO_REGS.forEach(r=>{s.add(String(r.emp)); if(r.roommate_emp) s.add(String(r.roommate_emp));}); return s;
+};
+const API = {
+  async login(emp){
+    if(DEMO){
+      await sleep(400);
+      const e = DEMO_EMPLOYEES.find(x=>String(x.emp)===String(emp));
+      if(!e) return {ok:false,error:"not_found"};
+      const reg = DEMO_REGS.find(r=>String(r.emp)===String(emp));
+      const ch = DEMO_REGS.find(r=>String(r.roommate_emp)===String(emp));
+      let registration=null;
+      if(reg){
+        const mateName = reg.roommate_emp ? ((DEMO_EMPLOYEES.find(x=>String(x.emp)===String(reg.roommate_emp))||{}).name||"") : "";
+        registration={ email:reg.email||"", phone:reg.phone||"", kashrut:reg.kashrut||"",
+          allergies:reg.allergies||"", allergy_other:"", life_threatening:"", has_injector:"",
+          allergy_note:"", medical:"", room_choice:reg.room_choice||(reg.roommate_emp?"choose":"auto"),
+          roommate_emp:reg.roommate_emp||null, roommate_name:mateName, bus_id:reg.bus||"offices" };
+      }
+      return {ok:true,
+        employee:{emp:e.emp, full_name:e.name, first_name:e.name.split(" ")[0]},
+        already_registered:!!reg,
+        chosen_by: ch?{emp:ch.emp,name:ch.name}:null,
+        chosen_room: ch?'choose':null, chosen_group: ch?[{emp:ch.emp,name:ch.name}]:[], chosen_hotel:null,
+        hotels:[{id:'naval',label:'מלון נבל דוד',pair_open:true,trio_open:true,any_open:true},
+                {id:'guma',label:'מלון גומא',pair_open:true,trio_open:true,any_open:true}],
+        edit_open:true, registration};
+    }
+    const {data,error} = await sb.rpc("firefly_login",{p_emp:Number(emp)});
+    if(error) throw error;
+    return data;
+  },
+  async contact(emp){
+    if(DEMO){
+      await sleep(120);
+      const r=DEMO_REGS.find(x=>String(x.emp)===String(emp));
+      return {email:(r&&r.email)||"", phone:(r&&r.phone)||""};
+    }
+    try{
+      const {data,error}=await sb.rpc("firefly_contact",{p_emp:Number(emp)});
+      if(error) throw error;
+      return data||{email:"",phone:""};
+    }catch(e){ console.warn("contact lookup failed",e); return {email:"",phone:""}; }
+  },
+  async busStatus(){
+    if(DEMO){
+      await sleep(200);
+      return DEMO_BUS_META.map(b=>{
+        const taken=(DEMO_BUS_BASE[b.id]||0)+DEMO_REGS.filter(r=>r.bus===b.id).length;
+        return {id:b.id,label:b.label,capacity:b.capacity,taken,remaining:Math.max(b.capacity-taken,0)};
+      });
+    }
+    const {data,error} = await sb.rpc("firefly_bus_status");
+    if(error) throw error;
+    return data;
+  },
+  async hotelStatus(){
+    if(DEMO){
+      await sleep(120);
+      return [{id:'naval',label:'מלון נבל דוד',pair_open:true,trio_open:true,any_open:true},
+              {id:'guma', label:'מלון גומא',   pair_open:true,trio_open:true,any_open:true}];
+    }
+    const {data,error} = await sb.rpc("firefly_hotel_status");
+    if(error) throw error;
+    return data;
+  },
+  async roommates(emp,q){
+    if(DEMO){
+      await sleep(150);
+      const taken=demoTaken(), qq=(q||"").trim();
+      return DEMO_EMPLOYEES
+        .filter(e=>String(e.emp)!==String(emp) && !taken.has(String(e.emp)) &&
+          (!qq || e.name.includes(qq) || String(e.emp).startsWith(qq)))
+        .slice(0,30).map(e=>({emp:e.emp,name:e.name}));
+    }
+    const {data,error} = await sb.rpc("firefly_available_roommates",{p_emp:Number(emp),p_query:q||""});
+    if(error) throw error;
+    return data;
+  },
+  async register(payload){
+    if(DEMO){
+      await sleep(700);
+      if(DEMO_REGS.some(r=>String(r.emp)===String(payload.emp))) return {ok:false,error:"already_registered"};
+      const chooser=DEMO_REGS.find(r=>String(r.roommate_emp)===String(payload.emp));
+      let room=payload.room_choice, mate=payload.roommate_emp?Number(payload.roommate_emp):null, mateName="";
+      if(chooser){ room="chosen"; mate=chooser.emp; mateName=chooser.name; }
+      else if(room==="choose"){
+        const taken=demoTaken();
+        if(!mate || taken.has(String(mate))) return {ok:false,error:"roommate_taken"};
+        mateName=(DEMO_EMPLOYEES.find(e=>String(e.emp)===String(mate))||{}).name||"";
+      } else { room="auto"; mate=null; }
+      const bus=DEMO_BUS_META.find(b=>b.id===payload.bus_id);
+      const taken=(DEMO_BUS_BASE[payload.bus_id]||0)+DEMO_REGS.filter(r=>r.bus===payload.bus_id).length;
+      if(!bus || taken>=bus.capacity) return {ok:false,error:"bus_full"};
+      DEMO_REGS.push({emp:Number(payload.emp), name:payload.full_name, roommate_emp:mate, bus:payload.bus_id});
+      return {ok:true, firstName:String(payload.full_name).split(" ")[0], roomChoice:room, roommateName:mateName, emailed:false};
+    }
+    const {data,error} = await sb.rpc("firefly_register",{p:payload});
+    if(error){ console.error(error); return {ok:false,error:"server_error"}; }
+    if(!data || !data.ok) return {ok:false, error:(data&&data.error)||"unknown"};
+    return {ok:true, firstName:data.first_name, roomChoice:data.room_choice, roommateName:data.roommate_name||"", emailed:true};
+  },
+  async update(payload){
+    if(DEMO){
+      await sleep(600);
+      const idx=DEMO_REGS.findIndex(r=>String(r.emp)===String(payload.emp));
+      if(idx<0) return {ok:false,error:"not_registered"};
+      const cur=DEMO_REGS[idx];
+      const chooser=DEMO_REGS.find(r=>String(r.roommate_emp)===String(payload.emp));
+      let room=payload.room_choice, mate=payload.roommate_emp?Number(payload.roommate_emp):null, mateName="";
+      if(chooser){ room="chosen"; mate=chooser.emp; mateName=chooser.name; }
+      else if(room==="choose"){
+        if(mate && String(mate)!==String(cur.roommate_emp)){
+          const taken=demoTaken();
+          if(taken.has(String(mate))) return {ok:false,error:"roommate_taken"};
+        }
+        mateName=(DEMO_EMPLOYEES.find(e=>String(e.emp)===String(mate))||{}).name||"";
+      } else { room="auto"; mate=null; }
+      // שחרור שותף קודם
+      if(cur.roommate_emp && String(cur.roommate_emp)!==String(mate)){
+        const op=DEMO_REGS.find(r=>String(r.emp)===String(cur.roommate_emp) && String(r.roommate_emp)===String(payload.emp));
+        if(op) op.roommate_emp=null;
+      }
+      DEMO_REGS[idx]={...cur, name:payload.full_name, email:payload.email, phone:payload.phone,
+        kashrut:payload.kashrut, allergies:payload.allergies, room_choice:room, roommate_emp:mate, bus:payload.bus_id};
+      return {ok:true, firstName:String(payload.full_name).split(" ")[0], roomChoice:room, roommateName:mateName, emailed:false, updated:true};
+    }
+    const {data,error} = await sb.rpc("firefly_update",{p:payload});
+    if(error){ console.error(error); return {ok:false,error:"server_error"}; }
+    if(!data || !data.ok) return {ok:false, error:(data&&data.error)||"unknown"};
+    return {ok:true, firstName:data.first_name, roomChoice:data.room_choice, roommateName:data.roommate_name||"", emailed:true, updated:true};
+  }
+};
+
+const ERR_MSG = {
+  not_found:"מספר העובד לא נמצא ברשימת המשתתפים. בדקו שוב או פנו אלינו.",
+  already_registered:"מספר העובד הזה כבר רשום לגיבוש. לשינויים פנו אלינו במייל.",
+  roommate_required:"נא לבחור שותף/ה מהרשימה.",
+  roommate_taken:"אופס — השותף/ה שבחרת נתפס/ה זה עתה. חזרו לשלב השותף ובחרו מישהו אחר.",
+  trio_full:"מצטערים — חדרי השלישייה במלון שבחרתם נתפסו. חזרו ובחרו חדר זוגי, 'שיבחרו עבורי', או מלון אחר.",
+  hotel_full:"מצטערים — המלון שבחרתם התמלא. חזרו לשלב המלון ובחרו מלון אחר.",
+  hotel_invalid:"נא לבחור מלון תקין.",
+  hotel_required:"נא לבחור מלון.",
+  bus_full:"נקודת ההסעה שבחרת התמלאה. חזרו לשלב ההסעה ובחרו נקודה אחרת.",
+  bus_invalid:"נקודת הסעה לא תקינה.",
+  edit_closed:"חלון העריכה נסגר. לשינויים פנו אלינו במייל.",
+  not_registered:"לא נמצאה הרשמה לעדכון.",
+  server_error:"אירעה שגיאה בשרת. נסו שוב בעוד רגע.",
+  unknown:"אירעה שגיאה. נסו שוב."
+};
+
+/* =================================================================
+   STATE
+   ================================================================= */
+const state = {
+  user:null, chosenBy:null, chosenRoom:null, chosenGroup:[], trioOpen:true,
+  email:"", phone:"", kashrut:"",
+  allergies:[], allergyOther:"", lifeRisk:"", injector:"", allergyNote:"", medical:"",
+  hotel:"", hotelLabel:"", hotels:[], chosenHotel:null,
+  roomChoice:"", mate:null, mate2:null,
+  bus:"", busLabel:"",
+  editing:false, existingReg:null, editOpen:true
+};
+let BUS_LABELS = {};
+let currentStep = 1;
+const TOTAL = 6;
+const STEP_NAMES = {1:"פרטים אישיים",2:"אוכל ובריאות",3:"מלון",4:"שותף/ה לחדר",5:"הסעה",6:"סיכום"};
+
+/* =================================================================
+   FIREFLIES BACKGROUND
+   ================================================================= */
+(function(){
+  const c=document.getElementById('fireflies'),x=c.getContext('2d');
+  let w,h,parts=[];
+  const COLORS=['#ffc23c','#ff7a1a','#ff2d8e','#b07bff'];
+  function size(){w=c.width=innerWidth;h=c.height=innerHeight;
+    const n=Math.min(46,Math.floor(w/30));parts=[];
+    for(let i=0;i<n;i++)parts.push({x:Math.random()*w,y:Math.random()*h,
+      r:Math.random()*1.8+1,sp:Math.random()*.5+.15,
+      a:Math.random(),da:(Math.random()*.02+.005)*(Math.random()<.5?1:-1),
+      dx:(Math.random()-.5)*.3,col:COLORS[Math.floor(Math.random()*COLORS.length)]});}
+  function tick(){x.clearRect(0,0,w,h);
+    for(const p of parts){p.y-=p.sp;p.x+=p.dx;p.a+=p.da;
+      if(p.a>1||p.a<.15)p.da*=-1;
+      if(p.y<-10){p.y=h+10;p.x=Math.random()*w;}
+      if(p.x<-10)p.x=w+10;if(p.x>w+10)p.x=-10;
+      x.beginPath();x.arc(p.x,p.y,p.r,0,7);
+      x.fillStyle=p.col;x.globalAlpha=Math.max(0,p.a*.85);
+      x.shadowBlur=12;x.shadowColor=p.col;x.fill();}
+    x.globalAlpha=1;x.shadowBlur=0;requestAnimationFrame(tick);}
+  if(!matchMedia('(prefers-reduced-motion:reduce)').matches){size();tick();addEventListener('resize',size);}
+})();
+
+/* =================================================================
+   LOGIN
+   ================================================================= */
+const gate=document.getElementById('gate'),gateMsg=document.getElementById('gateMsg'),gateBtn=document.getElementById('gateBtn');
+function scrollTopHard(){
+  const top=()=>window.scrollTo(0,0);
+  top(); requestAnimationFrame(top);
+  setTimeout(top,100); setTimeout(top,300); setTimeout(top,600);
+}
+async function doLogin(){
+  const v=document.getElementById('empNo').value.trim();
+  gateMsg.textContent="";
+  if(!v){gateMsg.textContent="נא להזין מספר עובד.";return;}
+  gateBtn.disabled=true; gateBtn.textContent="בודק…";
+  try{
+    const res=await API.login(v);
+    if(!res.ok){ gateMsg.textContent=ERR_MSG[res.error]||ERR_MSG.unknown; return; }
+    const u=res.employee;
+    state.user={emp:u.emp, full_name:u.full_name, first_name:u.first_name};
+    state.chosenBy=res.chosen_by||null;
+    state.chosenRoom=res.chosen_room||null;
+    state.chosenGroup=res.chosen_group||[];
+    state.hotels=res.hotels||[];
+    state.chosenHotel=res.chosen_hotel||null;
+    state.existingReg=res.registration||null;
+    state.editOpen = res.edit_open!==false;
+    document.getElementById('greetName').textContent=u.first_name;
+    document.getElementById('lkName').textContent=u.full_name;
+    document.getElementById('lkEmp').textContent=u.emp;
+    document.getElementById('confName').textContent=u.first_name;
+    document.getElementById('empNo').blur();   // לסגור את המקלדת בנייד
+    gate.classList.add('hidden');
+    document.getElementById('app').classList.add('show');
+    startCountdown(); buildTimeline(); buildAllergyChips(); buildHotelStep(); buildRoommateStep(); observeReveals();
+    // מילוי אוטומטי + נעילה של מייל/טלפון מתוך פרטי העובד
+    {
+      let c={email:u.email||"", phone:u.phone||""};
+      if(!c.email && !c.phone){ c=await API.contact(u.emp); }
+      setContact('email', c.email);
+      setContact('phone', c.phone);
+    }
+    if(res.already_registered && res.registration){
+      state.existingReg=res.registration;
+      await showMyReg(res.registration);
+    } else {
+      scrollTopHard();   // לפתוח בראש הדף (Hero) — גם בנייד אחרי סגירת המקלדת
+    }
+  }catch(err){
+    console.error(err); gateMsg.textContent="אירעה שגיאה בהתחברות. נסו שוב.";
+  }finally{
+    gateBtn.disabled=false; gateBtn.textContent="כניסה לאתר הגיבוש";
+  }
+}
+document.getElementById('gateBtn').addEventListener('click',doLogin);
+document.getElementById('empNo').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+
+/* =================================================================
+   מייל / טלפון — מילוי אוטומטי מתוך פרטי העובד + נעילה עם "תיקון"
+   ================================================================= */
+function setContact(field, value){
+  const wrap=document.querySelector(`.contact-lock[data-contact="${field}"]`);
+  const input=document.getElementById(field);
+  input.value=value||'';
+  if(value){                 // יש ערך מהדאטאבייס → נעול לעריכה
+    input.setAttribute('readonly','');
+    wrap.classList.add('locked');
+  }else{                     // אין ערך → פתוח להזנה ידנית
+    input.removeAttribute('readonly');
+    wrap.classList.remove('locked');
+  }
+  refreshContactNote();
+}
+function unlockContact(field){           // לחיצה על "תיקון" → פתיחה לעריכה
+  const wrap=document.querySelector(`.contact-lock[data-contact="${field}"]`);
+  document.getElementById(field).removeAttribute('readonly');
+  wrap.classList.remove('locked');
+  document.getElementById(field).focus();
+  refreshContactNote();
+}
+function refreshContactNote(){
+  const anyLocked=!!document.querySelector('.contact-lock.locked');
+  const note=document.getElementById('contactNote');
+  if(note) note.style.display=anyLocked?'block':'none';
+}
+document.querySelectorAll('.fix-btn').forEach(b=>
+  b.addEventListener('click',()=>unlockContact(b.dataset.fix)));
+
+/* =================================================================
+   COUNTDOWN  (2 Sep 2026, 08:30)
+   ================================================================= */
+function startCountdown(){
+  const target=new Date('2026-09-02T08:30:00+03:00').getTime();
+  function upd(){
+    const d=target-Date.now();
+    if(d<=0){document.getElementById('countdown').innerHTML='<div class="cd-box" style="min-width:auto;padding:16px 26px"><div class="cd-num grad-text">יצאנו לדרך! 🔥</div></div>';return;}
+    const dd=Math.floor(d/864e5),hh=Math.floor(d%864e5/36e5),mm=Math.floor(d%36e5/6e4),ss=Math.floor(d%6e4/1e3);
+    document.getElementById('cd-d').textContent=dd;
+    document.getElementById('cd-h').textContent=String(hh).padStart(2,'0');
+    document.getElementById('cd-m').textContent=String(mm).padStart(2,'0');
+    document.getElementById('cd-s').textContent=String(ss).padStart(2,'0');
+  }
+  upd();setInterval(upd,1000);
+}
+
+/* =================================================================
+   TIMELINE
+   ================================================================= */
+const SCHEDULE=[
+  [ // יום רביעי
+    {t:"08:30",h:"הגעה למשרדים והתארגנות ליציאה",loc:"משרדי החברה"},
+    {t:"11:00",h:"מסיבת בריכה לפתיחת הגיבוש",loc:"מלון נבל דוד"},
+    {t:"13:00",h:"ארוחת צהריים",loc:"מלון נבל דוד"},
+    {t:"15:00",h:"צ׳ק אין וקבלת חדרים",loc:"מלון נבל דוד / גומא"},
+    {t:"19:30",h:"ארוחת ערב",loc:"מלון נבל דוד / גומא"},
+    {t:"21:00",h:"אירוע הערב המרכזי",loc:"אמפי נבל דוד",badge:"מופע הפתעה — תכינו את הרגליים!"}
+  ],
+  [ // יום חמישי
+    {t:"08:00",h:"ארוחת בוקר (בהגעה חופשית)",loc:"מלון נבל דוד / גומא"},
+    {t:"11:00",h:"צ׳ק אאוט ויציאה לפעילות מגבשת",loc:"מלון נבל דוד / גומא"},
+    {t:"15:00",h:"סיום משוער ויציאה חזרה הביתה",loc:""}
+  ]
+];
+function buildTimeline(day=0){
+  const tl=document.getElementById('timeline');
+  tl.innerHTML=SCHEDULE[day].map(i=>`
+    <div class="tl-item">
+      <div class="tl-dot"></div>
+      <div class="tl-card">
+        <div class="tl-time">${i.t}</div>
+        <div class="tl-body">
+          <h4>${i.h}</h4>${i.loc?`<span>📍 ${i.loc}</span>`:""}
+          ${i.badge?`<div class="tl-badge">🎉 ${i.badge}</div>`:""}
+        </div>
+      </div>
+    </div>`).join("");
+}
+document.querySelectorAll('.day-tab').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.day-tab').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');buildTimeline(+b.dataset.day);
+}));
+
+
+/* =================================================================
+   JINGLE
+   ================================================================= */
+(function(){
+  const a=document.getElementById('jingle'),btn=document.getElementById('playBtn'),
+        icon=document.getElementById('playIcon'),eq=document.getElementById('eq'),txt=document.getElementById('jingleTxt');
+  const PLAY='<path d="M8 5v14l11-7z"/>',PAUSE='<path d="M6 5h4v14H6zM14 5h4v14h-4z"/>';
+  btn.addEventListener('click',()=>{
+    if(a.paused){
+      a.play().then(()=>{icon.innerHTML=PAUSE;eq.classList.add('on');txt.textContent="מתחממים לגיבוש...";})
+      .catch(()=>{txt.textContent="🎵 קובץ הג׳ינגל (jingle.mp3) יתווסף בהמשך";});
+    }else{a.pause();icon.innerHTML=PLAY;eq.classList.remove('on');txt.textContent="לחצו כדי להתחמם לקראת הגיבוש";}
+  });
+  a.addEventListener('ended',()=>{icon.innerHTML=PLAY;eq.classList.remove('on');txt.textContent="לחצו כדי להתחמם לקראת הגיבוש";});
+})();
+
+/* =================================================================
+   FORM — STEP 2: allergies
+   ================================================================= */
+const ALLERGY_OPTS=["אין לי רגישויות","גלאט","ללא גלוטן סטרילי","טבעוני","אחר"];
+// אפשרויות שאינן רגישות מסכנת-חיים — לא פותחות את שאלות ההמשך (מזרק / מסכן חיים)
+const NON_RISK_OPTS=["אין לי רגישויות","גלאט","טבעוני"];
+function buildAllergyChips(){
+  const wrap=document.getElementById('allergyChips');
+  wrap.innerHTML=ALLERGY_OPTS.map(o=>`<button type="button" class="chip${o==='אין לי רגישויות'?' none-opt':''}" data-a="${o}">${o}</button>`).join("");
+  wrap.querySelectorAll('.chip').forEach(ch=>ch.addEventListener('click',()=>toggleAllergy(ch)));
+}
+function toggleAllergy(ch){
+  const val=ch.dataset.a, none="אין לי רגישויות";
+  const chips=[...document.querySelectorAll('#allergyChips .chip')];
+  if(val===none){
+    chips.forEach(c=>{if(c.dataset.a!==none)c.classList.remove('sel')});
+    ch.classList.toggle('sel');
+  }else{
+    chips.find(c=>c.dataset.a===none)?.classList.remove('sel');
+    ch.classList.toggle('sel');
+  }
+  // recompute
+  state.allergies=chips.filter(c=>c.classList.contains('sel')).map(c=>c.dataset.a);
+  const hasOther=state.allergies.includes("אחר");
+  document.getElementById('otherWrap').style.display=hasOther?'block':'none';
+  const realAllergy=state.allergies.some(a=>!NON_RISK_OPTS.includes(a));
+  document.getElementById('followups').style.display=realAllergy?'block':'none';
+}
+// yes/no followups
+document.querySelectorAll('.yn').forEach(g=>{
+  g.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
+    g.querySelectorAll('button').forEach(x=>x.classList.remove('sel'));
+    b.classList.add('sel');state[g.dataset.yn]=b.dataset.v;
+  }));
+});
+
+/* =================================================================
+   FORM — STEP 3: hotel
+   ================================================================= */
+function hotelById(id){ return (state.hotels||[]).find(h=>h.id===id) || null; }
+function hotelLabelById(id){ const h=hotelById(id); return h?h.label:(id||'—'); }
+
+function buildHotelStep(){
+  const step=document.querySelector('.step[data-step="3"]');
+  const wrap=document.getElementById('hotelOptions');
+  const hint=step.querySelector('.hint');
+
+  if(state.chosenBy){
+    // המלון נקבע ע"י יוזם/ת החדר — נעול
+    const h=hotelById(state.chosenHotel);
+    state.hotel=state.chosenHotel||''; state.hotelLabel=h?h.label:'';
+    if(hint) hint.textContent='המלון נקבע ע״י יוזם/ת החדר.';
+    wrap.innerHTML = h
+      ? `<div class="chosen-card"><span class="ic">🏨</span><div><b>${h.label}</b><span>אתם באותו מלון של החדר שלכם.</span></div></div>`
+      : `<div class="hint">המלון ייקבע יחד עם החדר שלכם.</div>`;
+    return;
+  }
+
+  const myHotel = state.existingReg && state.existingReg.hotel;   // לשמר מלון קיים בעריכה גם אם התמלא
+  const list=(state.hotels||[]).filter(h=>h.any_open || h.id===myHotel);
+  if(!list.length){
+    wrap.innerHTML='<div class="err">אין כרגע מלונות פנויים. אנא פנו אלינו במייל שבתחתית העמוד.</div>';
+    return;
+  }
+  wrap.innerHTML=list.map(h=>`
+    <div class="radio-card" data-hotel="${h.id}" data-label="${h.label}">
+      <div class="ring"></div>
+      <div class="rc-body"><b>${h.label}</b><span>כנרת</span></div>
+    </div>`).join("");
+  wrap.querySelectorAll('[data-hotel]').forEach(card=>card.addEventListener('click',()=>{
+    wrap.querySelectorAll('[data-hotel]').forEach(c=>c.classList.remove('sel'));
+    card.classList.add('sel');
+    state.hotel=card.dataset.hotel; state.hotelLabel=card.dataset.label;
+    refreshRoomOptionsForHotel();
+  }));
+  if(state.hotel){ const c=wrap.querySelector(`[data-hotel="${state.hotel}"]`); if(c) c.classList.add('sel'); }
+}
+
+// רענון זמינות המלונות מהשרת (למשל אם מלון/שלישייה התמלאו בזמן ההרשמה)
+async function refreshHotels(){
+  try{ state.hotels = await API.hotelStatus(); }catch(e){ console.error(e); }
+  buildHotelStep(); refreshRoomOptionsForHotel();
+}
+
+/* =================================================================
+   FORM — STEP 4: roommate
+   ================================================================= */
+function resetRoomChoice(){
+  const step=document.querySelector('.step[data-step="4"]');
+  if(step) step.querySelectorAll('[data-room]').forEach(c=>c.classList.remove('sel'));
+  state.roomChoice=''; state.mate=null; state.mate2=null;
+  const search=document.getElementById('roomSearch'); if(search) search.style.display='none';
+  const trioNote=document.getElementById('trioNote'); if(trioNote) trioNote.style.display='none';
+  renderPicked();
+}
+// מציג/מסתיר את אפשרויות החדר לפי זמינות המלון שנבחר (בלי לחשוף מספרים)
+function refreshRoomOptionsForHotel(){
+  if(state.chosenBy) return;
+  const step=document.querySelector('.step[data-step="4"]');
+  if(!step) return;
+  const h=hotelById(state.hotel);
+  let pairOpen = h ? h.pair_open : true;
+  let trioOpen = h ? h.trio_open : true;
+  // מי שכבר רשום/ה לאותו סוג חדר באותו מלון — לא נחסום בעריכה (הוא/היא כבר תופס/ת את המקום)
+  const er=state.existingReg;
+  if(er && er.hotel===state.hotel){
+    if(er.room_choice==='trio') trioOpen=true;
+    if(er.room_choice==='choose' || er.room_choice==='auto') pairOpen=true;
+  }
+  const trioCard   = step.querySelector('[data-room="trio"]');
+  const chooseCard = step.querySelector('[data-room="choose"]');
+  const autoCard   = step.querySelector('[data-room="auto"]');
+  if(trioCard)   trioCard.style.display   = trioOpen ? '' : 'none';
+  if(chooseCard) chooseCard.style.display = pairOpen ? '' : 'none';
+  if(autoCard)   autoCard.style.display   = pairOpen ? '' : 'none';
+  if(state.roomChoice==='trio' && !trioOpen) resetRoomChoice();
+  if((state.roomChoice==='choose'||state.roomChoice==='auto') && !pairOpen) resetRoomChoice();
+}
+
+function buildRoommateStep(){
+  const step=document.querySelector('.step[data-step="4"]');
+  const cards=step.querySelectorAll('[data-room]');
+  const search=document.getElementById('roomSearch');
+  const hint=step.querySelector('.hint');
+  const trioNote=document.getElementById('trioNote');
+  const mateLabel=document.getElementById('mateLabel');
+
+  if(state.chosenBy){
+    // מישהו כבר בחר אותי — נעילה לקבוצה הקיימת (זוג או שלישייה)
+    cards.forEach(c=>c.style.display='none');
+    search.style.display='none';
+    state.roomChoice='chosen';
+    state.mate={emp:state.chosenBy.emp, name:state.chosenBy.name};
+    let title, sub;
+    if(state.chosenRoom==='trio'){
+      const names=(state.chosenGroup||[]).map(g=>g.name).join(' ו-');
+      hint.textContent='כבר יש לך חדר שלישייה 🎉';
+      title=`שובצת לחדר שלישייה יחד עם ${names}`;
+      sub='אתם משובצים יחד לחדר. אם יש בעיה — פנו אלינו במייל שבתחתית העמוד.';
+    }else{
+      hint.textContent='כבר יש לך שותף/ה לחדר 🎉';
+      title=`${state.chosenBy.name} כבר בחר/ה אותך כשותף/ה לחדר`;
+      sub='אתם משובצים יחד לחדר. אם יש בעיה — פנו אלינו במייל שבתחתית העמוד.';
+    }
+    const chosen=document.createElement('div');
+    chosen.className='chosen-card';
+    chosen.innerHTML=`<span class="ic">🤝</span><div><b>${title}</b><span>${sub}</span></div>`;
+    hint.insertAdjacentElement('afterend', chosen);
+    return;
+  }
+
+  cards.forEach(card=>card.addEventListener('click',()=>{
+    if(card.classList.contains('disabled')) return;
+    cards.forEach(c=>c.classList.remove('sel'));
+    card.classList.add('sel'); state.roomChoice=card.dataset.room;
+    const room=card.dataset.room;
+    if(room==='trio'){
+      search.style.display='block'; if(trioNote) trioNote.style.display='block';
+      if(mateLabel) mateLabel.textContent='בחרו 2 שותפים/ות לפי שם';
+      loadMates('');
+    }else if(room==='choose'){
+      search.style.display='block'; if(trioNote) trioNote.style.display='none';
+      if(mateLabel) mateLabel.textContent='חיפוש לפי שם עובד';
+      state.mate2=null; renderPicked(); loadMates('');
+    }else{
+      search.style.display='none'; if(trioNote) trioNote.style.display='none';
+      state.mate=null; state.mate2=null; renderPicked();
+    }
+  }));
+}
+
+const mateInput=document.getElementById('mateInput');
+let mateTimer=null;
+mateInput.addEventListener('input',()=>{ clearTimeout(mateTimer); mateTimer=setTimeout(()=>loadMates(mateInput.value),220); });
+function maxMates(){ return state.roomChoice==='trio' ? 2 : 1; }
+function pickMate(m){
+  if(maxMates()===1){ state.mate=m; state.mate2=null; }
+  else{
+    const picked=[state.mate,state.mate2].filter(Boolean);
+    if(picked.length>=2) return;               // כבר נבחרו 2 שותפים
+    if(!state.mate) state.mate=m; else state.mate2=m;
+  }
+  renderPicked(); mateInput.value=""; document.getElementById('mateList').innerHTML="";
+}
+async function loadMates(q){
+  const list=document.getElementById('mateList');
+  list.innerHTML='<div class="opt" style="opacity:.6">מחפש…</div>';
+  let res=[];
+  try{ res=await API.roommates(state.user.emp,q); }catch(e){ console.error(e); }
+  const pickedEmps=[state.mate,state.mate2].filter(Boolean).map(m=>Number(m.emp));
+  res=(res||[]).filter(e=>Number(e.emp)!==TEST_EMP && !pickedEmps.includes(Number(e.emp)));
+  if(!res.length){ list.innerHTML='<div class="opt" style="opacity:.6">לא נמצאו שותפים פנויים בשם זה</div>'; return; }
+  list.innerHTML=res.map(e=>`<div class="opt" data-emp="${e.emp}" data-name="${e.name}">${e.name}</div>`).join("");
+  list.querySelectorAll('.opt[data-emp]').forEach(o=>o.addEventListener('click',()=>{
+    pickMate({emp:Number(o.dataset.emp), name:o.dataset.name});
+  }));
+}
+function renderPicked(){
+  const w=document.getElementById('pickedWrap');
+  const slots=[['mate',state.mate],['mate2',state.mate2]].filter(([k,v])=>v);
+  if(!slots.length){ w.innerHTML=""; return; }
+  w.innerHTML=slots.map(([k,v])=>`<div class="picked-pill">✅ ${v.name} <button type="button" data-k="${k}" title="הסר">×</button></div>`).join("");
+  w.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
+    state[b.dataset.k]=null;
+    if(!state.mate && state.mate2){ state.mate=state.mate2; state.mate2=null; }
+    renderPicked();
+  }));
+}
+
+/* =================================================================
+   FORM — STEP 4: bus (מקומות פנויים בזמן אמת)
+   ================================================================= */
+async function loadBuses(){
+  const wrap=document.getElementById('busOptions');
+  wrap.innerHTML='<div class="hint" style="opacity:.6">טוען מקומות פנויים…</div>';
+  let buses=[];
+  try{ buses=await API.busStatus(); }
+  catch(e){ console.error(e); wrap.innerHTML='<div class="err">לא הצלחנו לטעון את מצב ההסעות. נסו לרענן.</div>'; return; }
+  buses.forEach(b=>{ BUS_LABELS[b.id]=b.label; });
+  wrap.innerHTML=buses.map(b=>{
+    const full=b.remaining<=0, low=!full&&b.remaining<=20, cls=full?'full':(low?'low':'');
+    const seatTxt=full?'אזל — אין מקומות':`נותרו ${b.remaining} מקומות`;
+    const title=b.label.split('—')[0].trim();
+    const sub=b.label.includes('—')?b.label.split('—')[1].trim():'נקודת איסוף';
+    return `<div class="radio-card ${full?'disabled':''}" data-bus="${b.id}" data-label="${b.label}">
+      <div class="ring"></div>
+      <div class="rc-body"><b>${title}</b><span>${sub}</span>
+        <span class="seats ${cls}">🚌 ${seatTxt}</span></div>
+    </div>`;
+  }).join("");
+  wrap.querySelectorAll('[data-bus]').forEach(card=>{
+    if(card.classList.contains('disabled'))return;
+    card.addEventListener('click',()=>{
+      wrap.querySelectorAll('[data-bus]').forEach(c=>c.classList.remove('sel'));
+      card.classList.add('sel'); state.bus=card.dataset.bus; state.busLabel=card.dataset.label;
+    });
+  });
+  // שמירת בחירה קודמת (אם עדיין זמינה)
+  if(state.bus){
+    const c=wrap.querySelector('[data-bus="'+state.bus+'"]');
+    if(c && !c.classList.contains('disabled')) c.classList.add('sel');
+    else { state.bus=''; state.busLabel=''; }
+  }
+}
+
+/* =================================================================
+   MY REGISTRATION + EDIT (למי שכבר נרשם)
+   ================================================================= */
+async function ensureBusLabels(){
+  if(Object.keys(BUS_LABELS).length) return;
+  try{ const b=await API.busStatus(); b.forEach(x=>BUS_LABELS[x.id]=x.label); }catch(e){}
+}
+function busLabel(id){ return BUS_LABELS[id]||id||'—'; }
+
+async function showMyReg(reg){
+  await ensureBusLabels();
+  document.getElementById('wizard').style.display='none';
+  document.getElementById('confirm').classList.remove('show');
+  document.getElementById('myReg').style.display='block';
+  document.getElementById('myRegWelcome').innerHTML =
+    `היי <b>${state.user.first_name}</b>, את/ה כבר רשום/ה לגיבוש ✓`;
+  let rm;
+  if(state.chosenBy && state.chosenRoom==='trio'){
+    const names=(state.chosenGroup||[]).map(g=>g.name).join(' ו-');
+    rm=`🤝 חדר שלישייה יחד עם: <b>${names}</b>`;
+  }else if(reg.room_choice==='trio'){
+    rm=`🤝 חדר שלישייה: <b>${reg.roommate_name}</b> ו-<b>${reg.roommate2_name}</b>`;
+  }else if(reg.room_choice==='auto' && !reg.roommate_emp){
+    rm='🤝 בחרת בשיבוץ אוטומטי — נעדכן אותך כאן ובמייל ברגע שתשובץ/י עם שותף/ה.';
+  }else if(reg.roommate_name){
+    rm=`🤝 שותף/ה לחדר: <b>${reg.roommate_name}</b>`;
+  }else rm='🤝 טרם נקבע שותף/ה לחדר.';
+  document.getElementById('myRegRoommate').innerHTML=rm;
+  renderRegReview('myRegReview', reg);
+  document.getElementById('myRegActions').style.display = state.editOpen?'':'none';
+  document.getElementById('myRegLocked').style.display  = state.editOpen?'none':'';
+  document.getElementById('formSection').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function renderRegReview(id, reg){
+  let roomTxt;
+  if(reg.room_choice==='trio')
+    roomTxt='חדר שלישייה: '+[reg.roommate_name,reg.roommate2_name].filter(Boolean).join(' + ');
+  else if(state.chosenBy && state.chosenRoom==='trio')
+    roomTxt='חדר שלישייה עם '+(state.chosenGroup||[]).map(g=>g.name).join(' + ');
+  else if(reg.room_choice==='auto') roomTxt = reg.roommate_name || 'שיבוץ אוטומטי';
+  else roomTxt = reg.roommate_name || '—';
+  const allergyTxt=(reg.allergies && reg.allergies!=='אין לי רגישויות') ? reg.allergies : 'אין';
+  const rows=[
+    ['שם מלא', state.user.full_name],['מספר עובד', state.user.emp],
+    ['מייל', reg.email],['טלפון', reg.phone],
+    ['רגישויות', allergyTxt + (reg.allergy_other?` (${reg.allergy_other})`:'')],
+    ...(reg.life_threatening?[['מסכנת חיים',reg.life_threatening],['מצויד/ת במזרק',reg.has_injector]]:[]),
+    ...(reg.medical?[['מצב רפואי',reg.medical]]:[]),
+    ['מלון', hotelLabelById(reg.hotel)],
+    ['שותף/ה לחדר', roomTxt],
+    ['נקודת איסוף', busLabel(reg.bus_id)]
+  ];
+  document.getElementById(id).innerHTML=rows.map(([k,v])=>
+    `<div class="row"><span class="k">${k}</span><span class="v">${v||'—'}</span></div>`).join("");
+}
+
+document.getElementById('editBtn').addEventListener('click',startEdit);
+function startEdit(){
+  state.editing=true;
+  document.getElementById('myReg').style.display='none';
+  document.getElementById('wizard').style.display='';
+  prefillWizard(state.existingReg);
+  currentStep=1; showStep(1);
+}
+
+function setYN(dataYn,val){
+  if(!val) return;
+  document.querySelectorAll(`.yn[data-yn="${dataYn}"] button`).forEach(b=>b.classList.toggle('sel', b.dataset.v===val));
+}
+
+function prefillWizard(reg){
+  setContact('email', reg.email||'');
+  setContact('phone', reg.phone||'');
+  document.getElementById('kashrut').value=reg.kashrut||'';
+  document.getElementById('medical').value=reg.medical||'';
+  document.getElementById('allergyNote').value=reg.allergy_note||'';
+  document.getElementById('allergyOther').value=reg.allergy_other||'';
+  state.allergies = reg.allergies ? reg.allergies.split('; ').filter(Boolean) : [];
+  document.querySelectorAll('#allergyChips .chip').forEach(c=>
+    c.classList.toggle('sel', state.allergies.includes(c.dataset.a)));
+  document.getElementById('otherWrap').style.display = state.allergies.includes('אחר')?'block':'none';
+  const realAllergy=state.allergies.some(a=>!NON_RISK_OPTS.includes(a));
+  document.getElementById('followups').style.display=realAllergy?'block':'none';
+  state.lifeRisk=reg.life_threatening||''; state.injector=reg.has_injector||'';
+  setYN('lifeRisk', reg.life_threatening); setYN('injector', reg.has_injector);
+  // מלון
+  state.hotel=reg.hotel||''; state.hotelLabel=hotelLabelById(reg.hotel);
+  prefillHotel(reg);
+  state.roomChoice=reg.room_choice;
+  state.mate = reg.roommate_emp ? {emp:reg.roommate_emp, name:reg.roommate_name} : null;
+  state.mate2 = reg.roommate_emp2 ? {emp:reg.roommate_emp2, name:reg.roommate2_name} : null;
+  prefillRoom(reg);
+  state.bus=reg.bus_id; state.busLabel=busLabel(reg.bus_id);
+}
+
+function prefillHotel(reg){
+  if(state.chosenBy) return; // מלון מורש — נעול ומוצג ע"י buildHotelStep
+  const wrap=document.getElementById('hotelOptions');
+  if(!wrap) return;
+  wrap.querySelectorAll('[data-hotel]').forEach(c=>
+    c.classList.toggle('sel', c.dataset.hotel===reg.hotel));
+  refreshRoomOptionsForHotel();
+}
+
+function prefillRoom(reg){
+  if(state.chosenBy) return; // נעול כבר ע"י buildRoommateStep
+  const step=document.querySelector('.step[data-step="4"]');
+  const cards=step.querySelectorAll('[data-room]');
+  const search=document.getElementById('roomSearch');
+  const trioNote=document.getElementById('trioNote');
+  const mateLabel=document.getElementById('mateLabel');
+  cards.forEach(c=>c.classList.remove('sel'));
+  if(reg.room_choice==='trio'){
+    const c=step.querySelector('[data-room="trio"]'); if(c) c.classList.add('sel');
+    search.style.display='block'; if(trioNote) trioNote.style.display='block';
+    if(mateLabel) mateLabel.textContent='בחרו 2 שותפים/ות לפי שם';
+    state.mate  = reg.roommate_emp ?{emp:reg.roommate_emp, name:reg.roommate_name} :null;
+    state.mate2 = reg.roommate_emp2?{emp:reg.roommate_emp2,name:reg.roommate2_name}:null;
+    renderPicked();
+  } else if(reg.room_choice==='choose'){
+    const c=step.querySelector('[data-room="choose"]'); if(c) c.classList.add('sel');
+    search.style.display='block'; if(trioNote) trioNote.style.display='none';
+    if(mateLabel) mateLabel.textContent='חיפוש לפי שם עובד';
+    state.mate = reg.roommate_emp?{emp:reg.roommate_emp,name:reg.roommate_name}:null;
+    state.mate2=null; renderPicked();
+  } else {
+    const c=step.querySelector('[data-room="auto"]'); if(c) c.classList.add('sel');
+    search.style.display='none'; if(trioNote) trioNote.style.display='none';
+    state.mate=null; state.mate2=null; renderPicked();
+  }
+}
+
+/* =================================================================
+   NAVIGATION + VALIDATION
+   ================================================================= */
+const nextBtn=document.getElementById('nextBtn'),backBtn=document.getElementById('backBtn');
+function showStep(n){
+  document.querySelectorAll('.step').forEach(s=>s.classList.toggle('active',+s.dataset.step===n));
+  document.getElementById('progressBar').style.width=(n/TOTAL*100)+"%";
+  document.getElementById('stepNum').textContent=n;
+  document.getElementById('stepName').textContent=STEP_NAMES[n];
+  backBtn.style.visibility=n>1?'visible':'hidden';
+  nextBtn.textContent=n===TOTAL?(state.editing?'שמירת השינויים 💾':'שליחת ההרשמה 🚀'):'הבא';
+  if(n===4) refreshRoomOptionsForHotel();
+  if(n===5) loadBuses();
+  document.getElementById('formSection').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function setErr(n,msg){document.getElementById('err'+n).textContent=msg||"";}
+
+function validate(n){
+  setErr(n,"");
+  if(n===1){
+    state.email=document.getElementById('email').value.trim();
+    state.phone=document.getElementById('phone').value.trim();
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(state.email)){setErr(1,"נא להזין כתובת מייל תקינה.");return false;}
+    if(state.phone.replace(/\D/g,'').length<9){setErr(1,"נא להזין מספר טלפון תקין.");return false;}
+  }
+  if(n===2){
+    state.kashrut=document.getElementById('kashrut').value.trim();
+    state.allergyOther=document.getElementById('allergyOther').value.trim();
+    state.allergyNote=document.getElementById('allergyNote').value.trim();
+    state.medical=document.getElementById('medical').value.trim();
+    if(!state.allergies.length){setErr(2,"נא לבחור לפחות אפשרות אחת (או 'אין לי רגישויות').");return false;}
+    if(state.allergies.includes("אחר")&&!state.allergyOther){setErr(2,"נא לפרט את הרגישות בשדה 'אחר'.");return false;}
+    const realAllergy=state.allergies.some(a=>!NON_RISK_OPTS.includes(a));
+    if(realAllergy&&(!state.lifeRisk||!state.injector)){setErr(2,"נא לענות על שאלות הרגישות (מסכנת חיים / מזרק).");return false;}
+  }
+  if(n===3){
+    if(state.chosenBy) return true;   // מלון מורש מיוזם/ת החדר
+    if(!state.hotel){setErr(3,"נא לבחור מלון.");return false;}
+  }
+  if(n===4){
+    if(!state.roomChoice){setErr(4,"נא לבחור אחת מהאפשרויות.");return false;}
+    if(state.roomChoice==='choose'&&!state.mate){setErr(4,"נא לבחור שותף/ה מהרשימה, או לשנות לאפשרות 'שיבחרו עבורי'.");return false;}
+    if(state.roomChoice==='trio'&&(!state.mate||!state.mate2)){setErr(4,"נא לבחור 2 שותפים/ות לחדר השלישייה.");return false;}
+  }
+  if(n===5){
+    if(!state.bus){setErr(5,"נא לבחור נקודת איסוף.");return false;}
+  }
+  return true;
+}
+function buildReview(){
+  const u=state.user;
+  let roomTxt;
+  if(state.roomChoice==='auto') roomTxt='שיבחרו עבורי';
+  else if(state.roomChoice==='trio') roomTxt='חדר שלישייה: '+[state.mate,state.mate2].filter(Boolean).map(m=>m.name).join(' + ');
+  else if(state.roomChoice==='chosen'){
+    if(state.chosenRoom==='trio') roomTxt='חדר שלישייה עם '+(state.chosenGroup||[]).map(g=>g.name).join(' + ');
+    else roomTxt=(state.mate?state.mate.name:'—')+' · בחר/ה אותך';
+  }
+  else roomTxt=state.mate?state.mate.name:'—';
+  const allergyTxt=state.allergies.includes("אין לי רגישויות")?'אין':
+     state.allergies.map(a=>a==="אחר"?`אחר: ${state.allergyOther}`:a).join(", ");
+  const rows=[
+    ["שם מלא",u.full_name],["מספר עובד",u.emp],
+    ["מייל",state.email],["טלפון",state.phone],
+    ["רגישויות",allergyTxt],
+    ...(state.lifeRisk?[["מסכנת חיים",state.lifeRisk],["מצויד/ת במזרק",state.injector]]:[]),
+    ...(state.medical?[["מצב רפואי",state.medical]]:[]),
+    ["מלון",state.hotelLabel||'—'],
+    ["שותף/ה לחדר",roomTxt],
+    ["נקודת איסוף",state.busLabel||'—']
+  ];
+  document.getElementById('reviewBox').innerHTML=rows.map(([k,v])=>
+    `<div class="row"><span class="k">${k}</span><span class="v">${v||'—'}</span></div>`).join("");
+}
+nextBtn.addEventListener('click',()=>{
+  if(!validate(currentStep))return;
+  if(currentStep===TOTAL){submitForm();return;}
+  currentStep++;
+  if(currentStep===TOTAL)buildReview();
+  showStep(currentStep);
+});
+backBtn.addEventListener('click',()=>{if(currentStep>1){currentStep--;showStep(currentStep);}});
+
+/* =================================================================
+   SUBMIT  → Google Apps Script (POST). דמו אם אין URL.
+   ================================================================= */
+function payload(){
+  const u=state.user;
+  return {
+    emp:u.emp,
+    full_name:u.full_name,
+    email:state.email, phone:state.phone,
+    kashrut:state.kashrut,
+    allergies:state.allergies.join("; "),
+    allergy_other:state.allergyOther,
+    life_threatening:state.lifeRisk,
+    has_injector:state.injector,
+    allergy_note:state.allergyNote,
+    medical:state.medical,
+    hotel:state.hotel,
+    room_choice:state.roomChoice,                                  // 'choose' | 'trio' | 'auto' | 'chosen'
+    roommate_emp:(state.mate && state.roomChoice!=='auto') ? String(state.mate.emp) : "",
+    roommate_emp2:(state.mate2 && state.roomChoice==='trio') ? String(state.mate2.emp) : "",
+    bus_id:state.bus
+  };
+}
+async function submitForm(){
+  const editing=state.editing;
+  nextBtn.disabled=true; nextBtn.textContent=editing?"שומר…":"שולח…"; setErr(6,"");
+  try{
+    const res = editing ? await API.update(payload()) : await API.register(payload());
+    if(!res || !res.ok){
+      const code=(res&&res.error)||'unknown';
+      setErr(6, ERR_MSG[code]||ERR_MSG.unknown);
+      if(code==='bus_full'){ currentStep=5; showStep(5); }
+      else if(code==='roommate_taken'){ state.mate=null; state.mate2=null; renderPicked(); currentStep=4; showStep(4); }
+      else if(code==='trio_full'){
+        // השלישייה במלון זה התמלאה — נרענן זמינות ונחזיר לבחירת החדר
+        state.mate=null; state.mate2=null; renderPicked();
+        await refreshHotels();
+        state.roomChoice=''; document.querySelectorAll('.step[data-step="4"] [data-room]').forEach(c=>c.classList.remove('sel'));
+        currentStep=4; showStep(4);
+      }
+      else if(code==='hotel_full' || code==='hotel_invalid'){
+        // המלון התמלא — נרענן ונחזיר לבחירת המלון
+        await refreshHotels();
+        state.hotel=''; state.hotelLabel=''; state.roomChoice='';
+        currentStep=3; showStep(3);
+      }
+      nextBtn.disabled=false; nextBtn.textContent=editing?"שמירת השינויים 💾":"שליחת ההרשמה 🚀";
+      return;
+    }
+    if(res.roommateName) state.mate={emp:state.mate?state.mate.emp:'', name:res.roommateName};
+    document.getElementById('wizard').style.display='none';
+    document.getElementById('myReg').style.display='none';
+    document.querySelector('#formSection .eyebrow').style.display='none';
+    document.querySelector('#formSection h2').style.display='none';
+    document.querySelector('#formSection .lead').style.display='none';
+    document.getElementById('confName').textContent=res.firstName||state.user.first_name;
+    document.getElementById('confTitle').textContent = editing ? "הפרטים עודכנו! ✓" : "נרשמתם בהצלחה! 🎉";
+    document.getElementById('confSub').innerHTML = editing
+      ? `<b class="em">${res.firstName||state.user.first_name}</b>, השינויים נשמרו.`
+      : `<b class="em">${res.firstName||state.user.first_name}</b>, שמורים לכם מקום בגיבוש.`;
+    document.getElementById('confMsg').textContent = editing
+      ? "עדכנו את הפרטים בהצלחה. אישור מעודכן יישלח אליכם למייל."
+      : "אישור הרשמה מפורט יישלח אליכם למייל. נרגשים ומצפים לחוות איתכם גיבוש בלתי נשכח על הכנרת!";
+    document.getElementById('confirm').classList.add('show');
+    document.getElementById('confirm').scrollIntoView({behavior:'smooth'});
+  }catch(e){
+    console.error(e);
+    setErr(5,"אופס, השליחה נכשלה. נסו שוב בעוד רגע.");
+    nextBtn.disabled=false; nextBtn.textContent=editing?"שמירת השינויים 💾":"שליחת ההרשמה 🚀";
+  }
+}
+
+/* =================================================================
+   SCROLL REVEALS
+   ================================================================= */
+function observeReveals(){
+  const io=new IntersectionObserver((ents)=>ents.forEach(e=>{
+    if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}
+  }),{threshold:.15});
+  document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+}
+</script>
+</body>
+</html>
