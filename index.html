@@ -1382,8 +1382,8 @@ async function loadBuses(){
   catch(e){ console.error(e); wrap.innerHTML='<div class="err">לא הצלחנו לטעון את מצב ההסעות. נסו לרענן.</div>'; return; }
   buses.forEach(b=>{ BUS_LABELS[b.id]=b.label; });
   wrap.innerHTML=buses.map(b=>{
-    const full=b.remaining<=0, low=!full&&b.remaining<=20, cls=full?'full':(low?'low':'');
-    const seatTxt=full?'אזל — אין מקומות':`נותרו ${b.remaining} מקומות`;
+    const full=b.remaining<=0, cls=full?'full':'';
+    const seatTxt=full?'אזל — אין מקומות':'זמין';
     const title=b.label.split('—')[0].trim();
     const sub=b.label.includes('—')?b.label.split('—')[1].trim():'נקודת איסוף';
     return `<div class="radio-card ${full?'disabled':''}" data-bus="${b.id}" data-label="${b.label}">
